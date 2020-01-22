@@ -7,35 +7,38 @@
 
 
 //将文件路径中的文件名去掉
-std::string get_filepath(std::string path) {
-	int pos = path.find_last_of('\\');
-	return path.substr(0, pos);
+inline std::string get_filepath(std::string path) {
+	return path.substr(0, path.find_last_of('\\'));
 }
 
 class JudgeConfig {
 public:
-	std::map<std::string, std::string>properties;
-	//待测代码路径 文件夹
-	std::string code_path;
-	//测试数据路径 文件夹
-	std::string data_path;
-	//待测代码文件名
-	std::string code_file_name;
 	JudgeConfig(const std::string& config_fie_path="config.properties") {
 		std::ifstream config_file_stream;
 		config_file_stream.open(config_fie_path.c_str(), std::ios::in);
 		if (config_file_stream.is_open()) {
-			//TODO: 文件存在 读取配置
+			//TODO:读取配置文件内容
+			std::string pro_inf[3];
+			
 		}
 		else {
 			//配置文件不存在 新建默认配置
 			//代码路径为当前路径
-			//数据文件路径为当前路径的data文件夹内 若不存在新建
-			//代码文件名默认为code.cpp
-			code_path = get_filepath(static_cast<std::string>(_pgmptr));
-			data_path = code_path + "\\data";
-			code_file_name = "code.cpp";
+			//TODO:数据文件路径为当前路径的data文件夹内 若不存在新建
+			//TODO:代码文件名默认为code.cpp 若不存在新建
+			std::string pro_inf[][3] = {
+				{"code_path","","测试代码路径"},
+				{"data_path","","测试数据路径"},
+				{"code_file_name","","待测代码文件名"}
+			};
+			pro_inf[0][1] = get_filepath(static_cast<std::string>(_pgmptr));
+			pro_inf[1][1] = pro_inf[0][1] + "\\data";
+			pro_inf[2][1] = "code.cpp";
+			for (auto& inf : pro_inf)
+				properties.insert(std::make_pair(inf[0], Properties{ inf }));
+			output_config();
 		}
+		config_file_stream.close();
 	}
 	void output_config() {
 		std::fstream config_file_write;
@@ -45,13 +48,15 @@ public:
 		}
 		else{
 			std::string out_inf = __config_template;
-			out_inf.replace(out_inf.find("%code_path%"), strlen("%code_path%"), code_path);
-			out_inf.replace(out_inf.find("%data_path%"), strlen("%data_path%"), data_path);
-			out_inf.replace(out_inf.find("%code_file_name%"), strlen("%code_file_name%"), code_file_name);
-			config_file_write << out_inf;
+			for(auto &inf:properties){
+				config_file_write << "# " << inf.second.getNote() << "\n";
+				config_file_write << inf.first << "=" << inf.second.getValue() << "\n";
+			}
 			config_file_write.close();
 			//TODO:输出成功结果提示
 		}
 	}
+protected:
+	std::map<std::string, Properties>properties;
 };
 
